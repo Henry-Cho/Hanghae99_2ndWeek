@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Sparta Vocabulary Notebook</title>
+    <meta property="og:title" content="Sparta Vocabulary Notebook"/>
+    <meta property="og:description" content="mini project for Web Plus"/>
+    <meta property="og:image" content="{{ url_for('static', filename='logo_red.png') }}"/>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+    <!-- FontAwesome Site -->
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" , href="{{ url_for('static', filename= 'style.css') }}">
+    <style>
+        span.example {
+            color: gray;
+            font-size: 14px;
+        }
+
+        .btn-sparta {
+            color: #fff;
+            background-color: #e8344e;
+            border-color: #e8344e;
+        }
+
+        .btn-outline-sparta {
+            color: #e8344e;
+            background-color: transparent;
+            background-image: none;
+            border-color: #e8344e;
+        }
+    </style>
+    <script>
+        let word = '{{ word }}'
+        $(document).ready(function () {
+            get_examples();
+        })
+
+        function save_word() {
+            $.ajax({
+                type: "POST",
+                url: `/api/save_word`,
+                data: {
+                    word_give: "{{ word }}",
+                    definition_give: "{{ result.definitions[0].definition }}"
+                },
+                success: function (response) {
+                    alert(response["msg"])
+                    window.location.href = "/detail/{{ word }}?status_give=old"
+                }
+            });
+        }
+
+        function delete_word() {
+            $.ajax({
+                type: "POST",
+                url: `/api/delete_word`,
+                data: {
+                    word_give: "{{ word }}",
+                },
+                success: function (response) {
+                    alert(response["msg"])
+                    window.location.href = "/"
+                }
+            });
+        }
+
+        function get_examples() {
+            $("#example-list").empty()
+            $.ajax({
+                type: "GET",
+                url: `/api/get_exs?word_give=${word}`,
+                data: {},
+                success: function (response) {
+                    let lists = response['all_examples'];
+                    console.log(lists);
+                    let target_list = lists.filter(list => list['word'] == word);
+
+                    for (let i = 0; i < target_list.length; i++) {
+                        let ex_id = target_list[i]['ex_id'];
+                        let example = target_list[i]['example'];
+                        let temp_html = `
+                    <li id="ex-${ex_id}">${example}<button
+                        onclick="delete_ex('${ex_id}')">delete</button></li>
+                    `;
+                        $("#example-list").append(temp_html);
+                    }
+                    $('#new-example').empty();
+
+
+                }
+            });
+        }
+
+        function add_ex() {
+            let new_ex = $('#new-example').val();
+            if (new_ex.includes(word)) {
+                console.log(new_ex)
+                $.ajax({
+                    type: "POST",
+                    url: `/api/save_ex`,
+                    data: {
+                        'ex_give': new_ex,
+                        'word_give': "{{ word }}"
+                    },
+                    success: function (response) {
+                        alert(response['result']);
+                        get_examples();
+                    }
+                });
+            } else {
+                alert("예문에 단어를 포함해주세요");
+                window.location.reload();
+            }
+
+        }
+
+        function delete_ex(i) {
+            console.log("deleting", i);
+            $.ajax({
+                type: "POST",
+                url: `/api/delete_ex`,
+                data: {
+                    word_give: word,
+                    id_give: i
+                },
+                success: function (response) {
+                    alert(response['msg']);
+                    get_examples();
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+<div class="wrap">
+    <div class="banner" onclick="window.location.href = '/'">
+    </div>
+
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end">
+            <div>
+                <h1 id="word" style="display: inline;">{{ word }}</h1>
+                <h5 id="pronunciation" style="display: inline;">
+                    {% if result.pronunciation != None %}
+                        {{ result.pronunciation }}
+                    {% else %}
+                        {{ "" }}
+                    {% endif %}
+                </h5>
+            </div>
+            {% if status == "new" %}
+                <button onclick="save_word()" id="btn-save" class="btn btn-outline-sparta btn-lg"><img
+                        src="{{ url_for('static', filename='delete.png') }}" style="width: 20px; height: 20px;"/></i>
+                </button>
+            {% else %}
+                <button onclick="delete_word()" id="btn-delete" class="btn btn-sparta btn-lg"><img
+                        src="{{ url_for('static', filename='save.png') }}" style="width: 20px; height: 20px;"/>
+                </button>
+            {% endif %}
+        </div>
+        <hr>
+        <div id="definitions">
+            {% for definition in result.definitions %}
+                <div style="padding:10px">
+                    <i>{{ definition.type }}</i>
+                    <br>{{ definition.definition.encode('ascii', 'ignore').decode('utf-8')|safe }}<br>
+                    {% if definition.example %}
+                        <span class="example">{{ definition.example.encode('ascii', 'ignore').decode('utf-8')|safe }}</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% if status != "new" %}
+        <div id="examples" class="container">
+            <h3 style="text-align: center;margin-bottom:1rem">Write your own sentences!</h3>
+            <ul id="example-list">
+
+            </ul>
+            <div class="d-flex justify-content-between" style="margin-left:20px;">
+                <input id="new-example" class="form-control form-control-sm" style="margin-right: 0.5rem">
+                <button class="btn btn-outline-secondary btn-sm" onclick="add_ex()">add</button>
+            </div>
+        </div>
+    {% endif %}
+</div>
+</body>
+</html>

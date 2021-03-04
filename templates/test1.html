@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <!-- 이렇게 body 안에 html 로 넣는 법도 있고-->
+    <a href="/">메인 페이지로 가기</a>
+    <!-- 이렇게 script 를 활용해서 함수 -> 버튼 만들어서 구성하는 방법이 있다. -->
+    <script>
+        function to_main() {
+            window.location.href = "/";
+        }
+    </script>
+    <button onclick="to_main()">메인으로 돌아가기</button>
+    <!-- 서버에서 했던 부분이 html 에서 보여지는 방법 -->
+    <h2>{{ word }}</h2>
+</body>
+</html>

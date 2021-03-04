@@ -1,0 +1,65 @@
+<!-- Jinja2 Template 연습하는 챕터 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+</head>
+<body>
+<a href="/detail">상세 페이지로 가기</a>
+<!-- 밑에 name 이라는 친구는 서버에서 할당해준 변수.. html 에서 바로 사용할 수 있다니!! -->
+<h3>Hello, {{ name }}</h3>
+<!--미세먼지 정보 html 로 가져올 곳-->
+<ul id="gu-list">
+    <li>{{ rows[0].MSRSTE_NM }}: {{ rows[0].IDEX_MVL }}</li>
+    {% set gu_name = rows[0].MSRSTE_NM %}
+    {% set gu_mise = rows[0].IDEX_MVL %}
+    <li>{{ gu_name }}: {{ gu_mise }}</li>
+
+    <!-- for 을 쓸 때 뒤에 : 를 붙이지 않아도 된다니!! -->
+    {% for row in rows %}
+        {% set gu_name = row['MSRSTE_NM'] %}
+        {% set gu_mise = row['IDEX_MVL'] %}
+        <li>{{ gu_name }}: {{ gu_mise }}</li>
+    {% endfor %}
+
+
+</ul>
+<script>
+    // 미세먼지 정보 open API 에서 받아오는 Ajax
+    $(document).ready(function () {
+        get_list()
+    })
+
+    function get_list() {
+        $.ajax({
+            type: "GET",
+            url: "http://openapi.seoul.go.kr:8088/6d4d776b466c656533356a4b4b5872/json/RealtimeCityAir/1/99",
+            data: {},
+            success: function (response) {
+                let rows = response["RealtimeCityAir"]["row"];
+                console.log(rows)
+            }
+        })
+    }
+
+    $.ajax({
+        type: "GET",
+        url: "https://owlbot.info/api/v4/dictionary/owl",
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader("Authorization", "Token cf2d1479a4a52e822922b9e7f1a5d1eed86e84e9");
+        },
+        data: {},
+        error: function (xhr, status, error) {
+            alert("에러 발생!");
+        },
+        success: function (response) {
+            console.log(response)
+        }
+    })
+
+</script>
+</body>
+</html>
